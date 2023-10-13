@@ -88,7 +88,7 @@ async function execute(message, serverQueue) {
     };
 
     // Check if queue exists and if not, create new queue
-    if (!serverQueue) {
+    if (!serverQueue || serverQueue.songs.length <= 0) {
         // create new queue
         const queueContract = {
             textChannel: message.channel,
@@ -126,38 +126,47 @@ async function execute(message, serverQueue) {
     } else {
         // add song to existing queue
         serverQueue.songs.push(song);
+        console.log("Song added to the queue!")
         console.log(serverQueue.songs);
-        return message.channel.send(`${song.title} has been added to the queue!`);
+        return message.channel.send(`**${song.title}** has been added to the queue!`);
     }
 }
 
 function play(guild, player, song) {
-    const { AudioPlayerStatus, createAudioResource } = require("@discordjs/voice");
-
+    const { AudioPlayerStatus, createAudioResource, VoiceConnectionState, VoiceConnectionDestroyedState } = require("@discordjs/voice");
     const serverQueue = queue.get(guild.id);
-    // If no song, leave voicechannel
+
+    // If no song in queue, leave voicechannel
     if (!song) {
-        player.stop();
-        // serverQueue.connection.destroy();
+        player.stop()
+
+        serverQueue.connection.disconnect();
+        console.log("Connection disconnected!");
+        if (serverQueue.connection.state != VoiceConnectionDestroyedState) {
+            serverQueue.connection.destroy();
+            console.log("Connection destroyed!");
+        }
+        console.log("No songs in queue. Stopped playing!");
         return;
     }
+
     try {
-        let url = song.url;
-        console.log(url);
-        let stream = ytdl(song.url, { filter: "audioonly" } );
-        console.log("Stream: " + stream);
-        let resource = createAudioResource(stream);
-        player.play(resource);
+        let resource = createAudioResource(ytdl(song.url, { filter: "audioonly" } ));
+        player.play(resource)
+        player.on(AudioPlayerStatus.Idle, () => {
+            console.log("Audio player idle...")
+            // play-function calls itself recursively to play the next song
+            console.log("Moving to next song in queue.")
+            serverQueue.songs.shift();
+            play(guild, player, serverQueue.songs[0]);
+        })
     } catch (err) {
         console.error(err);
     }
-    /*
-    player.play(ytdl(song.url)).on(AudioPlayerStatus.Idle, () => {
-        serverQueue.songs.shift();
-        play(guild, player, serverQueue.songs[0]);
-    }).catch(e => { console.error(e); });
-    */
-    serverQueue.textChannel.send(`Start playing: **${song.title}**`);
+
+    let title = song.title;
+    serverQueue.textChannel.send(`Start playing: **${title}**`);
+    console.log(`Now playing: ${title}.`)
 }
 
 // Log in
