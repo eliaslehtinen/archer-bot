@@ -6,7 +6,7 @@ const { prefix } = require("./config.json");
 const ytdl = require("ytdl-core");
 const ffmpeg = require("ffmpeg");
 const token = process.env.ARCHERBOT_TOKEN;
-const { generateDependencyReport } = require("@discordjs/voice");
+const { generateDependencyReport, createAudioPlayer } = require("@discordjs/voice");
 
 console.log(generateDependencyReport());
 
@@ -61,6 +61,8 @@ const queue = new Map();
 Checks if user in voice channel and bot has right permissions
 and tries to add a new song to the queue.
 */
+const player = createAudioPlayer();
+
 async function execute(message, serverQueue) {
     // Splits message into separate strings
     const args = message.content.split(" ");
@@ -106,14 +108,13 @@ async function execute(message, serverQueue) {
         // Try to join voicechat
         try {
 
-            const { joinVoiceChannel, createAudioPlayer } = require("@discordjs/voice")
+            const { joinVoiceChannel } = require("@discordjs/voice")
             var connection = await joinVoiceChannel({
                 channelId: voiceChannel.id,
                 guildId: voiceChannel.guild.id,
                 adapterCreator: voiceChannel.guild.voiceAdapterCreator,
             });
             queueContract.connection = connection;
-            const player = createAudioPlayer();
             queueContract.connection.subscribe(player);
             // Start playing a song
             play(message.guild, player, queueContract.songs[0]);
@@ -131,6 +132,22 @@ async function execute(message, serverQueue) {
         return message.channel.send(`**${song.title}** has been added to the queue!`);
     }
 }
+
+
+function skip(message, serverQueue) {
+    if (!message.member.voice.channel) {
+        return message.channel.send(
+            "You have to be in a voice channel to stop the music!"
+        );
+    }
+    if (!serverQueue) {
+        return message.channel.send(
+            "There is no song that I could skip!"
+            );
+    }
+    player.stop();
+}
+
 
 function play(guild, player, song) {
     const { AudioPlayerStatus, createAudioResource, VoiceConnectionState, VoiceConnectionDestroyedState } = require("@discordjs/voice");
