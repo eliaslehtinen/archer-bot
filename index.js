@@ -162,31 +162,3 @@ function play(guild, player, song) {
 
 // Log in
 client.login(token);
-
-
-/*
-// Play a song in voicechat
-function play(guild, song) {
-    const serverQueue = queue.get(guild.id);
-    // If no song, leave voicechannel
-    if (!song) {
-        serverQueue.voiceChannel.leave();
-        queue.delete(guild.id);
-        return;
-    }
-
-    // Create stream and play the song
-    const dispatcher = serverQueue.connection
-        .play(ytdl(song.url))
-        .on("finish", () => {
-            // When song ends, go to next song
-            serverQueue.songs.shift();
-            play(guild, serverQueue.songs[0]);
-        })
-        .on("error", error => console.error(error));
-    // Set volume
-    dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
-    // Send message when song starts
-    serverQueue.textChannel.send(`Start playing: **${song.title}**`);
-}
-*/
