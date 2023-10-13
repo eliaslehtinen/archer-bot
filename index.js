@@ -7,16 +7,21 @@ const ytdl = require('ytdl-core');
 const token = process.env.ARCHERBOT_TOKEN;
 
 // Create client and log in
-const client = new Discord.Client();
+const client = new Discord.Client({
+    intents: [
+        Discord.GatewayIntentBits.GuildMessages,
+        Discord.GatewayIntentBits.MessageContent,
+    ],
+});
 client.login(token);
 
 // Add listeners
-Client.once('ready', () => {
+client.once('ready', () => {
     console.log('Ready!');
 })
-Client.once('reconnecting', () => {
+client.once('reconnecting', () => {
     console.log('Reconnecting!');
 })
-Client.once('disconnect', () => {
+client.once('disconnect', () => {
     console.log('Disconnect!');
 })
