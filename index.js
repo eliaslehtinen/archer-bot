@@ -134,18 +134,30 @@ async function execute(message, serverQueue) {
 }
 
 
+// Skips current song and starts playing the next in queue
 function skip(message, serverQueue) {
     if (!message.member.voice.channel) {
-        return message.channel.send(
-            "You have to be in a voice channel to stop the music!"
-        );
+        return message.channel.send("You have to be in a voice channel to skip the song!");
     }
     if (!serverQueue) {
-        return message.channel.send(
-            "There is no song that I could skip!"
-            );
+        return message.channel.send("There is no song that I could skip!");
     }
     player.stop();
+    return;
+}
+
+
+// Clears queue and stops playing music
+function stop(message, serverQueue) {
+    if (!message.member.voice.channel) {
+        return message.channel.send("You have to be in a voice channel to stop the music!");
+    }
+    if (!serverQueue) {
+        return message.channel.send("There is no song that I could stop!");
+    }
+    serverQueue.songs = [];
+    player.stop();
+    return;
 }
 
 
@@ -158,11 +170,14 @@ function play(guild, player, song) {
         player.stop()
 
         serverQueue.connection.disconnect();
+        serverQueue.songs = [];
         console.log("Connection disconnected!");
+        /*
         if (serverQueue.connection.state != VoiceConnectionDestroyedState) {
             serverQueue.connection.destroy();
             console.log("Connection destroyed!");
         }
+        */
         console.log("No songs in queue. Stopped playing!");
         return;
     }
