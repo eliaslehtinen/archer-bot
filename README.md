@@ -1,2 +1,2 @@
 # archer-bot
-Simple discord bot that can play music
+Simple discord bot that can interact with Trello and GitHub
